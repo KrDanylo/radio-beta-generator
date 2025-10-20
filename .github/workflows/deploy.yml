@@ -1,0 +1,46 @@
+# .github/workflows/deploy.yml
+
+name: Build and Deploy to Azure
+
+# This workflow runs automatically every time you push to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # Use a fresh Linux server from GitHub for the build
+
+    steps:
+    # Step 1: Check out your repository's code
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v2
+
+    # Step 2: Log in to your Azure account securely
+    - name: 'Login to Azure'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Step 3: Log in to your Azure Container Registry (ACR)
+    - name: 'Login to Azure Container Registry'
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    # Step 4: Build the Docker image and push it to your ACR
+    # The image will be tagged with a unique identifier from the commit (github.sha)
+    - name: 'Build and push Docker image'
+      run: |
+        docker build . -t ${{ secrets.ACR_LOGIN_SERVER }}/radio-generator:${{ github.sha }}
+        docker push ${{ secrets.ACR_LOGIN_SERVER }}/radio-generator:${{ github.sha }}
+
+    # Step 5: Deploy the new image to your Azure App Service
+    - name: 'Deploy to Azure App Service'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'radio-beta-generator-docker' # Your App Service name
+        images: '${{ secrets.ACR_LOGIN_SERVER }}/radio-generator:${{ github.sha }}'
