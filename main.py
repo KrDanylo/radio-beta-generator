@@ -22,8 +22,8 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # --- Configuration ---
 URL = "https://www.radia.sk/radia/beta/playlist"
-REQUEST_TIMEOUT_SEC = 5
-REQUEST_TIMEOUT_SEC_HTTP = 5
+REQUEST_TIMEOUT_SEC = 28
+REQUEST_TIMEOUT_SEC_HTTP = 28
 LOCAL_TZ = ZoneInfo("Europe/Bratislava")
 RADIO_NAME = "Beta"
 
