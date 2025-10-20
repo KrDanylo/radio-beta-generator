@@ -3,11 +3,15 @@
 FROM python:3.10-slim AS builder
 
 # Install necessary system dependencies for Chrome and chromedriver
-RUN apt-get update && apt-get install -y wget gnupg unzip
+# Added 'curl' and 'gpg' which are needed for the new key management method
+RUN apt-get update && apt-get install -y wget gnupg unzip curl gpg
 
-# Add Google Chrome's official repository
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+# --- NEW, MODERN WAY TO ADD GOOGLE'S KEY ---
+# Download the key and save it to the trusted keyring directory
+RUN curl -sS https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome-archive-keyring.gpg
+# Add the Google Chrome repository, referencing the new key file
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-archive-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+# --- END NEW METHOD ---
 
 # Install Google Chrome Stable
 RUN apt-get update && apt-get install -y google-chrome-stable
